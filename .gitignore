@@ -1,0 +1,20 @@
+# Virtual Environment
+# Ignores the venv folder which contains installed packages
+venv/
+.venv/
+
+# Python cache files
+# These are generated automatically by Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment variables
+# This file contains secrets and should NEVER be committed
+.env
+
+# IDE / Editor specific folders
+# Optional, but good practice for PyCharm and VS Code
+.idea/
+.vscode/
