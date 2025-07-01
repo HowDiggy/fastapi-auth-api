@@ -68,3 +68,23 @@ def update_user_email(db: Session, user: models.User, new_email: str) -> models.
     db.commit()
     db.refresh(user)
     return user
+
+def update_user_password(db: Session, user: models.User, new_password: str) -> models.User:
+    """
+    Updates a user's password in the database.
+
+    This function hashes the new password before saving it.
+
+    :param db: The SQLAlchemy database session.
+    :param user: The existing user model instance to update.
+    :param new_password: The new plain-text password.
+    :return: The updated user model instance.
+    """
+
+    hashed_password = security.get_password_hash(new_password)
+    user.hashed_password = hashed_password
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    return user

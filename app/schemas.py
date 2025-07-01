@@ -33,3 +33,16 @@ class UserUpdate(BaseModel):
     """
     email: EmailStr
     current_password: str
+
+class PasswordReset(BaseModel):
+    """
+    Schema for the password reset request body.
+    """
+    token: str
+    new_password: str
+
+class Msg(BaseModel):
+    """
+    Schema for generic messages.
+    """
+    msg: str
