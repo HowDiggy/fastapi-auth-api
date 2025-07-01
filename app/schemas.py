@@ -1,5 +1,5 @@
 import uuid
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 # base schema with shared attributes
 class UserBase(BaseModel):
@@ -16,3 +16,20 @@ class User(UserBase):
 
     # tells Pydantic to read the data even if it is not a dict, but an ORM model
     model_config = ConfigDict(from_attributes=True)
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    email: str | None = None
+
+class TokenPayload(BaseModel):
+    sub: str | None = None
+
+class UserUpdate(BaseModel):
+    """
+    Schema for the user update request body.
+    """
+    email: EmailStr
+    current_password: str

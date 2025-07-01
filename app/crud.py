@@ -51,3 +51,20 @@ def get_user_by_email(db: Session, email: str) -> models.User | None:
     :return: The user model instance if a user with the given email exists, None otherwise
     """
     return db.query(models.User).filter(models.User.email == email).first()
+
+def update_user_email(db: Session, user: models.User, new_email: str) -> models.User:
+    """
+    Updates a user's email address in the database.
+
+    :param db: The SQLAlchemy database session
+    :param user: The existing user model instance to update
+    :param new_email: The new email address to set for the user.
+    :return: The updated user model instance
+    :raises: IntegrityError: If the new email address is already taken by another user.
+    """
+
+    user.email = new_email
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
