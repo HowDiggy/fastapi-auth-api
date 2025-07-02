@@ -1,12 +1,45 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
-from .. import crud, security, schemas
+from .users import get_current_user, oauth2_scheme
+from .. import crud, security, schemas, models
 from .. database import get_db
 
 router = APIRouter(tags=["Authentication"])
 
+
+def get_current_user_from_refresh_token(
+        token: str = Depends(oauth2_scheme),
+        db: Session = Depends(get_db),
+) -> models.User:
+    """
+    Dependency to get the current user from the refresh token.
+
+    Decodes the refresh token, validates it, and fetches the user from the database.
+    Raisses an exception if the token is invalid or the user does not exist.
+
+    :param token: The refresh token from the Authorization header.
+    :param db: The database dependency.
+    :raises HTTPException(status_code=401, detail="Could not validate refresh token.")
+    :return: The user model instance.
+    """
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate refresh token",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    email = security.verify_refresh_token(token)
+
+    if email is None:
+        raise credentials_exception
+
+    user = crud.get_user_by_email(db, email=email)
+
+    if user is None:
+        raise credentials_exception
+
+    return user
 
 @router.post("/token", response_model=schemas.Token)
 def login_for_access_token(
@@ -14,7 +47,7 @@ def login_for_access_token(
         db: Session = Depends(get_db),
 ) -> schemas.Token:
     """
-    Provides an access token for a user after authenticating them.
+    Provides an access token and refresh token for a user after authenticating them.
 
     :param form_data: The user's credentials (username and password) sent as form data.
                       FastAPI's OAuth2PasswordRequestForm dependency handles this.
@@ -31,9 +64,15 @@ def login_for_access_token(
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token = security.create_access_token(data={"sub": user.email})
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    access_token = security.create_access_token(data={"sub": user.email})
+    refresh_token = security.create_refresh_token(data={"sub": user.email})
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+    }
 
 @router.post("/password-recovery/{email}", response_model=schemas.Msg)
 def recover_password(email: str, db: Session = Depends(get_db)) -> schemas.Msg:
@@ -100,3 +139,25 @@ def reset_password(body: schemas.PasswordReset, db: Session = Depends(get_db)):
     crud.update_user_password(db=db, user=user, new_password=body.new_password)
 
     return {"msg": "Password updated successfully"}
+
+@router.post("/token/refresh/", response_model=schemas.AccessToken)
+def refresh_access_token(
+        current_user: models.User = Depends(get_current_user_from_refresh_token),
+) -> schemas.Token:
+    """
+    Refreshes an access token using a valid refresh token.
+
+    The refresh token should be provided as a Bearer token in the Authorization header.
+
+    :param current_user: The user object for the currently authenticated user, injected by the dependency.
+    :return: A new access token.
+    """
+
+    # generate a new access token
+    new_access_token = security.create_access_token(data={"sub": current_user.email})
+
+    # return the new access token along with the original refresh token
+    return {
+        "access_token": new_access_token,
+        "token_type": "bearer",
+    }

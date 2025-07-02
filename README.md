@@ -6,6 +6,8 @@ A robust and secure standalone authentication and user management API built with
 
 - **Secure User Registration:** `POST /users/` endpoint with robust password hashing using `passlib` and `bcrypt`.
 - **JWT-Based Authentication:** Standard `POST /token` endpoint (OAuth2 Password Flow) that returns a signed JSON Web Token (JWT).
+- **Token Refresh:** A `POST /token/refresh/` endpoint to issue a new access token using a valid refresh token.
+- **Secure Password Reset:** A full, multi-step flow to allow users to securely reset a forgotten password.
 - **Protected Routes:** A `GET /users/me` endpoint to demonstrate how to protect routes and retrieve data for the currently authenticated user.
 - **Secure Profile Updates:** A `PUT /users/me` endpoint that allows users to update their profile information after re-verifying their password.
 - **Modular & Scalable Architecture:** Code is organized by concern (`crud`, `routers`, `schemas`, `security`) for maintainability.
@@ -65,6 +67,9 @@ A robust and secure standalone authentication and user management API built with
 ## API Endpoints Overview
 
 - `POST /users/`: Register a new user.
-- `POST /token`: Log in to receive a JWT access token.
-- `GET /users/me/`: Get the profile of the currently authenticated user.
 - `PUT /users/me/`: Update the email of the currently authenticated user.
+- `GET /users/me/`: Get the profile of the currently authenticated user.
+- `POST /token`: Log in to receive JWT access and refresh tokens.
+- `POST /token/refresh/`: Get a new access token using a refresh token.
+- `POST /password-recovery/{email}`: Request a password reset for a user.
+- `POST /reset-password/`: Finalize a password reset with a token and new password.

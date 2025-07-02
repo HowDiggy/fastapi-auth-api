@@ -19,6 +19,7 @@ class User(UserBase):
 
 class Token(BaseModel):
     access_token: str
+    refresh_token: str
     token_type: str
 
 class TokenData(BaseModel):
@@ -46,3 +47,10 @@ class Msg(BaseModel):
     Schema for generic messages.
     """
     msg: str
+
+class AccessToken(BaseModel):
+    """
+    Schema for returning just an access token.
+    """
+    access_token: str
+    token_type: str
